@@ -1,4 +1,4 @@
-// server.js — GoalLine market sync worker
+// server.js — Match Pulse market sync worker
 //
 // Pulls World Cup fixtures/odds/scores from TxLINE and writes them into the
 // Firestore "markets" collection in the exact shape index.html expects:
@@ -49,7 +49,7 @@ if (TELEGRAM_BOT_TOKEN) {
 
   // Registers the native "/" commands menu button in Telegram's chat UI
   bot.setMyCommands([
-    { command: "start", description: "Get started / link your GoalLine account" },
+    { command: "start", description: "Get started / link your Match Pulse account" },
     { command: "link", description: "Link your account" },
     { command: "unlink", description: "Stop receiving alerts" },
     { command: "help", description: "Show all commands" },
@@ -57,20 +57,20 @@ if (TELEGRAM_BOT_TOKEN) {
 
   const awaitingOtp = new Set(); // chatIds we just asked for an OTP, expecting plain text next
 
-  const HELP_TEXT = "📋 *GoalLine Bot Commands*\n\n"
-    + "/start — Welcome message & instructions\n"
-    + "/link — Link your GoalLine account (I'll ask for your code)\n"
-    + "/unlink — Stop receiving alerts on this chat\n"
-    + "/help — Show this list\n\n"
-    + "Once linked, I message you here automatically for goals ⚽, cards 🟨🟥, big odds shifts 📊, and full-time results 🏁 — no further commands needed.";
+  const HELP_TEXT = "⚡ *Match Pulse — Bot Menu*\n\n"
+    + "/start — Get set up\n"
+    + "/link — Link this chat to your Match Pulse account\n"
+    + "/unlink — Turn off alerts here\n"
+    + "/help — Show this menu\n\n"
+    + "Once you're linked, I drop a pulse straight into this chat the moment something happens — goals ⚽, cards 🟨🟥, big odds swings 📊, full-time ⏱️. Nothing else to do after that.";
 
-  const START_TEXT = "👋 *Welcome to GoalLine!*\n\n"
-    + "I send live World Cup alerts straight to this chat — goals, cards, odds shifts, and full-time scores.\n\n"
-    + "*To link your account:*\n"
-    + "1. Open the GoalLine app → Profile → Connect Telegram\n"
-    + "2. You'll get a 6-digit code\n"
-    + "3. Send /link here, then just type the code when I ask for it\n\n"
-    + "Tap the button below any time to see all commands.";
+  const START_TEXT = "⚡ *Match Pulse is live.*\n\n"
+    + "Every goal, card, and big odds swing from the World Cup — pushed straight to this chat the second it happens.\n\n"
+    + "*Get linked in 3 steps:*\n"
+    + "1. Open Match Pulse → Profile → Connect Telegram\n"
+    + "2. Grab the 6-digit code it gives you\n"
+    + "3. Send /link here, then drop in that code\n\n"
+    + "Tap below to see everything I can do.";
 
   const commandsButton = {
     reply_markup: { inline_keyboard: [[{ text: "📋 Show Commands", callback_data: "show_commands" }]] },
@@ -88,7 +88,7 @@ if (TELEGRAM_BOT_TOKEN) {
     }
     const linkedDoc = await findLinkedUser(msg.chat.id);
     if (linkedDoc) {
-      bot.sendMessage(msg.chat.id, `✅ You're already linked as *${linkedDoc.data().name || "a GoalLine user"}*. You'll keep getting live match alerts here — no action needed. Use /unlink if you ever want to stop.`, { parse_mode: "Markdown" });
+      bot.sendMessage(msg.chat.id, `⚡ You're already wired in as *${linkedDoc.data().name || "a Match Pulse user"}*. Alerts keep flowing here — no need to do anything else. Send /unlink if you want it to stop.`, { parse_mode: "Markdown" });
       return;
     }
     bot.sendMessage(msg.chat.id, START_TEXT, { parse_mode: "Markdown", ...commandsButton });
@@ -101,7 +101,7 @@ if (TELEGRAM_BOT_TOKEN) {
   bot.onText(/^\/link(?:\s+(\w+))?$/, async (msg, match) => {
     const linkedDoc = await findLinkedUser(msg.chat.id);
     if (linkedDoc) {
-      bot.sendMessage(msg.chat.id, `You're already linked as *${linkedDoc.data().name || "a GoalLine user"}*. Use /unlink first if you want to link a different account.`, { parse_mode: "Markdown" });
+      bot.sendMessage(msg.chat.id, `⚡ Already linked as *${linkedDoc.data().name || "a Match Pulse user"}*. Send /unlink first if you'd rather switch accounts.`, { parse_mode: "Markdown" });
       return;
     }
     if (match[1]) {
@@ -116,10 +116,10 @@ if (TELEGRAM_BOT_TOKEN) {
   bot.onText(/\/unlink/, async (msg) => {
     const linkedDoc = await findLinkedUser(msg.chat.id);
     if (!linkedDoc) {
-      bot.sendMessage(msg.chat.id, "You're not currently linked to a GoalLine account.");
+      bot.sendMessage(msg.chat.id, "You're not currently linked to a Match Pulse account.");
       return;
     }
-    bot.sendMessage(msg.chat.id, "⚠️ Are you sure? You'll stop receiving goal, card, odds-shift, and full-time alerts.", {
+    bot.sendMessage(msg.chat.id, "⚡ Sure you want to cut the pulse? You'll stop getting goal, card, odds-shift, and full-time alerts.", {
       reply_markup: { inline_keyboard: [[
         { text: "✅ Yes, unlink", callback_data: "unlink_confirm" },
         { text: "❌ Cancel", callback_data: "unlink_cancel" },
@@ -147,7 +147,7 @@ if (TELEGRAM_BOT_TOKEN) {
       const linkedDoc = await findLinkedUser(chatId);
       if (linkedDoc) {
         await linkedDoc.ref.update({ telegramChatId: admin.firestore.FieldValue.delete() });
-        bot.sendMessage(chatId, "🔕 You've been unlinked. You won't receive any more alerts here. Send /link any time to reconnect.");
+        bot.sendMessage(chatId, "🔕 Pulse stopped. You won't get any more alerts here. Send /link any time to reconnect.");
       } else {
         bot.sendMessage(chatId, "You're not currently linked.");
       }
@@ -155,7 +155,7 @@ if (TELEGRAM_BOT_TOKEN) {
     }
     if (query.data === "unlink_cancel") {
       await bot.answerCallbackQuery(query.id);
-      bot.sendMessage(chatId, "👍 Staying linked — you'll keep getting alerts.");
+      bot.sendMessage(chatId, "⚡ Staying linked — the pulse keeps going.");
       return;
     }
   });
@@ -176,13 +176,13 @@ if (TELEGRAM_BOT_TOKEN) {
 async function linkTelegramCode(code, chatId) {
   const usersSnap = await db.collection("users").where("telegramOtp", "==", code).limit(1).get();
   if (usersSnap.empty) {
-    bot.sendMessage(chatId, "❌ Invalid or expired code. Generate a new one from Profile → Connect Telegram.");
+    bot.sendMessage(chatId, "⚡ That code doesn't check out. Grab a fresh one from Profile → Connect Telegram.");
     return;
   }
   const userDoc = usersSnap.docs[0];
   const user = userDoc.data();
   if (user.telegramOtpExpires && user.telegramOtpExpires.toMillis() < Date.now()) {
-    bot.sendMessage(chatId, "❌ That code expired. Generate a new one from Profile → Connect Telegram.");
+    bot.sendMessage(chatId, "⚡ That code's expired. Grab a fresh one from Profile → Connect Telegram.");
     return;
   }
   await userDoc.ref.update({
@@ -190,7 +190,7 @@ async function linkTelegramCode(code, chatId) {
     telegramOtp: admin.firestore.FieldValue.delete(),
     telegramOtpExpires: admin.firestore.FieldValue.delete(),
   });
-  bot.sendMessage(chatId, `✅ Linked! You're set as ${user.name || "a GoalLine user"}. I'll ping you here for goals, red cards, and big odds shifts.`);
+  bot.sendMessage(chatId, `⚡ You're in, ${user.name || "a Match Pulse user"}. Goals, red cards, and big odds swings land here from now on.`);
 }
 
 const TTS_ENABLED = process.env.TELEGRAM_TTS_ENABLED === "true";
@@ -235,7 +235,7 @@ async function notifyLinkedUsers(text, speakText, imageUrl) {
 // ─── PREVIOUS STATE CACHE (for detecting goals / odds shifts) ───────────
 const prevFixtureState = new Map();
 const ODDS_SHIFT_PROB_THRESHOLD = 8; // percentage points of implied probability — robust across all odds scales
-const GOAL_IMAGE_URL = "https://i.postimg.cc/y6Zkd4rW/file-000000006cd081f4910f83c867f91fa9.png";
+const GOAL_IMAGE_URL = "https://i.postimg.cc/4NLHv8Jf/3a286e2dbcbfaaff3e322753e21c3e84.jpg";
 
 function impliedProb(decimalOdds) {
   return decimalOdds ? Math.round((1 / decimalOdds) * 100) : null;
@@ -290,7 +290,7 @@ async function maybeNotify(fixtureId, homeTeam, awayTeam, marketDoc, odds, cards
             `${scorerPhrase ? scorerPhrase + " levels it up! " : ""}${curr.score} — we're all square again, wide open from here.`,
           ]);
 
-      const text = `⚽ *GOAL!*\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
+      const text = `⚡ *PULSE — GOAL!*\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
       await notifyLinkedUsers(text, `Goal! ${homeTeam} ${curr.score.replace("-", " ")} ${awayTeam}.`, GOAL_IMAGE_URL);
       await logMatchEvent(fixtureId, { type: "goal", label: `Goal — ${scoringTeam}${scorer ? ` (${scorer})` : ""}` });
     }
@@ -299,7 +299,7 @@ async function maybeNotify(fixtureId, homeTeam, awayTeam, marketDoc, odds, cards
         `${homeTeam} are down to ten men — ${awayTeam} will sense the opening immediately.`,
         `Straight red for ${homeTeam}! A mountain to climb from here, and the market already knows it.`,
       ]);
-      const text = `🟥 *RED CARD* — ${homeTeam}\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
+      const text = `⚡ *PULSE — RED CARD* — ${homeTeam}\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
       await notifyLinkedUsers(text, `Red card for ${homeTeam}. They're down to ten men.`);
       await logMatchEvent(fixtureId, { type: "red", label: `Red card — ${homeTeam}` });
     }
@@ -308,7 +308,7 @@ async function maybeNotify(fixtureId, homeTeam, awayTeam, marketDoc, odds, cards
         `${awayTeam} are down to ten men — ${homeTeam} will sense the opening immediately.`,
         `Straight red for ${awayTeam}! A mountain to climb from here, and the market already knows it.`,
       ]);
-      const text = `🟥 *RED CARD* — ${awayTeam}\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
+      const text = `⚡ *PULSE — RED CARD* — ${awayTeam}\n${homeTeam} ${curr.score} ${awayTeam}\n${commentary}`;
       await notifyLinkedUsers(text, `Red card for ${awayTeam}. They're down to ten men.`);
       await logMatchEvent(fixtureId, { type: "red", label: `Red card — ${awayTeam}` });
     }
@@ -338,7 +338,7 @@ async function maybeNotify(fixtureId, homeTeam, awayTeam, marketDoc, odds, cards
           `The market has swung hard toward ${favoring} — implied confidence moved from roughly ${prevHomeProb}% to ${currHomeProb}%.`,
           `Money is piling in behind ${favoring} right now — confidence jumped from about ${prevHomeProb}% to ${currHomeProb}%.`,
         ]);
-        const text = `📊 *Big odds shift* — ${homeTeam} vs ${awayTeam}\nHome ${prev.oddsHome.toFixed(2)} → ${curr.oddsHome.toFixed(2)} | Away ${prev.oddsAway.toFixed(2)} → ${curr.oddsAway.toFixed(2)}\n${commentary}`;
+        const text = `⚡ *PULSE — ODDS SHIFT* — ${homeTeam} vs ${awayTeam}\nHome ${prev.oddsHome.toFixed(2)} → ${curr.oddsHome.toFixed(2)} | Away ${prev.oddsAway.toFixed(2)} → ${curr.oddsAway.toFixed(2)}\n${commentary}`;
         await notifyLinkedUsers(text, `Big odds shift. The market is now favoring ${favoring}.`);
       }
     }
@@ -347,7 +347,7 @@ async function maybeNotify(fixtureId, homeTeam, awayTeam, marketDoc, odds, cards
       const resultLine = hGoals === aGoals
         ? `It ends level — honours shared at ${curr.score}.`
         : `${hGoals > aGoals ? homeTeam : awayTeam} see it out, ${curr.score} the final score.`;
-      const text = `🏁 *Full-time*\n${homeTeam} ${curr.score} ${awayTeam}\n${resultLine}`;
+      const text = `⚡ *PULSE — FULL TIME*\n${homeTeam} ${curr.score} ${awayTeam}\n${resultLine}`;
       await notifyLinkedUsers(text, `Full time. ${homeTeam} ${curr.score.replace("-", " ")} ${awayTeam}.`);
     }
   }
@@ -834,4 +834,3 @@ function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
-
