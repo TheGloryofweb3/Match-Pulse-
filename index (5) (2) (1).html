@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Match Pulse — Feel the Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --pearl: #FAF8F2;
+    --pearl2: #F3EEE0;
+    --marigold: #F2A900;
+    --marigold-deep: #D99400;
+    --amber-ink: #8A5A00;
+    --ink: #171410;
+    --ink-soft: #5B5648;
+    --glass: rgba(255,255,255,0.55);
+    --glass-strong: rgba(255,255,255,0.78);
+    --glass-border: rgba(255,255,255,0.9);
+    --line: rgba(23,20,16,0.08);
+    --red: #D64545;
+    --green: #2E9E5B;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html, body { height: 100%; overflow-x: hidden; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--pearl);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Ambient background blobs */
+  .bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(70px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .bg-blob.b1 { width: 340px; height: 340px; background: rgba(242,169,0,0.35); top: -100px; right: -80px; }
+  .bg-blob.b2 { width: 280px; height: 280px; background: rgba(242,169,0,0.22); bottom: 10%; left: -100px; }
+  .bg-blob.b3 { width: 220px; height: 220px; background: rgba(217,148,0,0.18); bottom: -60px; right: 20%; }
+
+  .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+
+  /* ─── Glass primitives ─── */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(138,90,0,0.08);
+  }
+  .glass-strong {
+    background: var(--glass-strong);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--glass-border);
+  }
+
+  h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.01em; }
+  .mono { font-family: var(--font-mono); }
+
+  /* ─── AUTH SCREEN ─── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .brand-mark {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .pulse-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--marigold), var(--marigold-deep));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(242,169,0,0.4);
+  }
+  .pulse-icon svg { width: 24px; height: 24px; }
+  .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--ink); }
+  .brand-name span { color: var(--marigold-deep); }
+  .brand-tag {
+    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 32px; font-weight: 600;
+  }
+
+  .auth-card {
+    width: 100%; max-width: 380px;
+    border-radius: 28px;
+    padding: 8px;
+  }
+  .auth-tabs {
+    display: flex; gap: 4px; padding: 6px; border-radius: 20px;
+    background: rgba(23,20,16,0.04);
+    margin-bottom: 22px;
+  }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 12px; border-radius: 14px;
+    font-weight: 600; font-size: 14px; color: var(--ink-soft);
+    background: none; border: none; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    background: linear-gradient(135deg, var(--marigold), var(--marigold-deep));
+    color: #1a1200;
+    box-shadow: 0 4px 14px rgba(242,169,0,0.35);
+  }
+  .auth-body { padding: 4px 18px 22px; }
+
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 6px; display: block;
+  }
+  .field-group { margin-bottom: 16px; }
+  .field-input {
+    width: 100%; padding: 14px 16px; border-radius: 14px;
+    border: 1.5px solid var(--line); background: rgba(255,255,255,0.7);
+    font-family: var(--font-body); font-size: 15px; color: var(--ink);
+    outline: none; transition: border-color 0.2s;
+  }
+  .field-input:focus { border-color: var(--marigold); background: #fff; }
+  .field-input::placeholder { color: rgba(23,20,16,0.35); }
+
+  .btn-primary {
+    width: 100%; padding: 15px; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, var(--marigold), var(--marigold-deep));
+    color: #1a1200; font-family: var(--font-display); font-weight: 700; font-size: 15px;
+    cursor: pointer; box-shadow: 0 8px 22px rgba(242,169,0,0.4);
+    transition: transform 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+
+  .auth-link { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 14px; }
+  .auth-link a { color: var(--marigold-deep); font-weight: 600; text-decoration: none; }
+
+  /* ─── APP SHELL ─── */
+  #app-shell { display: none; padding-bottom: 92px; position: relative; z-index: 1; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 14px;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand .pulse-icon { width: 36px; height: 36px; border-radius: 11px; }
+  .topbar-brand .brand-name { font-size: 19px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .balance-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 8px 8px 16px; border-radius: 999px;
+    font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+  }
+  .balance-pill .add-btn {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--ink); color: var(--marigold);
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .avatar-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--marigold), var(--marigold-deep));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; color: #1a1200; font-size: 15px;
+  }
+
+  .tab-page { display: none; padding: 0 20px; }
+  .tab-page.active { display: block; }
+
+  /* ─── Pulse hero ─── */
+  .pulse-hero {
+    border-radius: 26px; padding: 24px; margin-bottom: 22px; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(242,169,0,0.30) 0%, rgba(255,255,255,0.78) 45%, rgba(217,148,0,0.22) 100%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 34px rgba(138,90,0,0.18);
+  }
+  .pulse-hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--amber-ink); margin-bottom: 10px;
+  }
+  .pulse-hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: dotPulse 1.4s infinite; }
+  @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .pulse-hero h2 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .pulse-hero-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 16px; }
+  .pulse-stats { display: flex; gap: 22px; }
+  .pulse-stat-num { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--marigold-deep); }
+  .pulse-stat-label { font-size: 11px; color: var(--ink-soft); }
+
+  /* Heartbeat line signature */
+  .heartbeat-line { width: 100%; height: 34px; margin-top: 14px; }
+  .heartbeat-line svg { width: 100%; height: 100%; }
+  .heartbeat-line path {
+    fill: none; stroke: var(--marigold-deep); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 340; stroke-dashoffset: 340;
+    animation: drawPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes drawPulse { 0% { stroke-dashoffset: 340; } 55% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -340; } }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 12px; }
+  .section-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: dotPulse 1.4s infinite; }
+  .see-all { background: none; border: none; color: var(--amber-ink); font-weight: 600; font-size: 13px; cursor: pointer; }
+
+  .matches-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .matches-scroll::-webkit-scrollbar { display: none; }
+  #home-upcoming-scroll { scroll-snap-type: x proximity; padding: 4px 30px; }
+  #home-upcoming-scroll .match-card {
+    scroll-snap-align: center; transform: scale(0.9); opacity: 0.7;
+    transition: transform 0.3s cubic-bezier(.2,.9,.3,1), opacity 0.3s ease;
+  }
+  #home-upcoming-scroll .match-card.is-centered { transform: scale(1); opacity: 1; }
+  .matches-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .match-card {
+    min-width: 260px; border-radius: 20px; padding: 16px; position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .matches-list .match-card { min-width: 0; width: 100%; }
+  .match-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .match-status-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 999px; display: flex; align-items: center; gap: 5px;
+  }
+  .match-status-badge.live { background: rgba(214,69,69,0.12); color: var(--red); }
+  .match-status-badge.upcoming { background: rgba(23,20,16,0.06); color: var(--ink-soft); }
+  .match-status-badge.completed { background: rgba(46,158,91,0.12); color: var(--green); }
+  .match-time-label { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+
+  .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .team-block { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+  .team-flag { font-size: 26px; }
+  .team-name { font-size: 12px; font-weight: 600; text-align: center; }
+  .score-center { font-family: var(--font-mono); font-size: 24px; font-weight: 700; padding: 0 10px; }
+  .vs-center { font-family: var(--font-display); font-size: 14px; color: var(--ink-soft); padding: 0 10px; }
+
+  .heartbeat-mini { width: 100%; height: 18px; margin: 8px 0 10px; opacity: 0.8; }
+  .heartbeat-mini svg { width: 100%; height: 100%; }
+  .heartbeat-mini path {
+    fill: none; stroke: var(--red); stroke-width: 1.6; stroke-linecap: round;
+    stroke-dasharray: 200; stroke-dashoffset: 200;
+    animation: drawPulse 2s ease-in-out infinite;
+  }
+
+  .odds-row { display: flex; gap: 8px; }
+  .odds-btn {
+    flex: 1; text-align: center; padding: 9px 4px; border-radius: 12px;
+    background: rgba(255,255,255,0.6); border: 1px solid var(--line);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .odds-btn:active { transform: scale(0.96); }
+  .odds-btn.selected {
+    background: var(--ink); border-color: var(--ink);
+    transform: scale(1.08); box-shadow: 0 6px 16px rgba(23,20,16,0.25);
+  }
+  .odds-btn.selected .odds-label, .odds-btn.selected .odds-val { color: var(--marigold); }
+  .odds-label { font-size: 9px; color: var(--ink-soft); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .odds-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin-top: 2px; }
+
+  /* ─── Bottom nav ─── */
+  .bottom-nav {
+    position: fixed; bottom: 10px; left: 0; right: 0; z-index: 50;
+    max-width: 440px; margin: 0 auto;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 14px 10px;
+    border-radius: 26px;
+    box-shadow: 0 -8px 30px rgba(138,90,0,0.1);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--ink-soft); font-size: 10px; font-weight: 600;
+    cursor: pointer; padding: 6px 14px; border-radius: 14px; transition: all 0.2s;
+  }
+  .nav-item i { font-size: 17px; }
+  .nav-item { transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s ease, color 0.2s ease; }
+  .nav-item.active { color: var(--marigold-deep); background: rgba(242,169,0,0.12); transform: scale(1.12); }
+
+  /* ─── Bet sheet ─── */
+  .sheet-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(23,20,16,0.35); z-index: 200;
+  }
+  .bet-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto;
+    border-radius: 26px 26px 0 0; padding: 22px; transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(.2,.9,.3,1); z-index: 201;
+    background: #FFFDF8;
+  }
+  .sheet-handle { width: 40px; height: 4px; background: rgba(23,20,16,0.15); border-radius: 2px; margin: 0 auto 16px; }
+  #bet-sheet-content { animation: sheetContentIn 0.35s cubic-bezier(.2,.9,.3,1); }
+  @keyframes sheetContentIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .stake-chips { display: flex; gap: 8px; margin: 14px 0; }
+  .stake-chip {
+    flex: 1; padding: 10px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 13px;
+    background: rgba(242,169,0,0.1); border: 1.5px solid transparent; cursor: pointer; font-family: var(--font-mono);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .stake-chip.selected { background: var(--marigold); border-color: var(--marigold-deep); color: #1a1200; transform: scale(1.1); box-shadow: 0 6px 16px rgba(242,169,0,0.35); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); }
+  .empty-state i { font-size: 32px; margin-bottom: 10px; color: var(--marigold); opacity: 0.6; }
+
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 14px;
+    font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: all 0.3s;
+    max-width: 320px; text-align: center; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .filter-pills { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; scrollbar-width: none; }
+  .filter-pills::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap;
+    background: rgba(255,255,255,0.6); border: 1px solid var(--line); color: var(--ink-soft); cursor: pointer;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s ease, color 0.2s ease;
+  }
+  .filter-pill.active { background: var(--ink); color: var(--marigold); border-color: var(--ink); transform: scale(1.1); }
+
+  .profile-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 16px 0; }
+  .profile-stat-card { border-radius: 16px; padding: 14px 10px; text-align: center; }
+  .profile-stat-num { font-family: var(--font-mono); font-size: 18px; font-weight: 700; }
+  .profile-stat-label { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+
+  .menu-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 16px; border-radius: 16px; margin-bottom: 10px; cursor: pointer;
+  }
+  .menu-row-left { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; }
+  .menu-row-left i { width: 20px; text-align: center; color: var(--marigold-deep); }
+
+  /* ─── Match Detail overlay ─── */
+  .match-detail-overlay {
+    position: fixed; inset: 0; z-index: 300; background: var(--pearl);
+    max-width: 480px; margin: 0 auto;
+    transform: translateX(100%); transition: transform 0.3s cubic-bezier(.2,.9,.3,1);
+    display: flex; flex-direction: column;
+  }
+  .match-detail-overlay.open { transform: translateX(0); }
+  .md-header { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .md-back { width: 34px; height: 34px; border-radius: 50%; background: rgba(23,20,16,0.06); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .md-body { flex: 1; overflow-y: auto; padding: 18px; }
+  .md-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 16px 0; }
+  .md-stat-card { border-radius: 16px; padding: 12px 8px; text-align: center; }
+  .md-stat-nums { display: flex; justify-content: space-between; font-family: var(--font-mono); font-weight: 700; font-size: 14px; padding: 0 6px; }
+  .md-stat-label { font-size: 10px; color: var(--ink-soft); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .md-timeline-item { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .md-timeline-item:last-child { border-bottom: none; }
+  .md-chat-section { border-top: 1px solid var(--line); display: flex; flex-direction: column; height: 260px; flex-shrink: 0; }
+  .md-chat-messages { flex: 1; overflow-y: auto; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .md-chat-msg { max-width: 82%; padding: 8px 12px; border-radius: 14px; background: rgba(255,255,255,0.6); font-size: 13px; align-self: flex-start; }
+  .md-chat-name { font-size: 10px; font-weight: 700; color: var(--marigold-deep); margin-bottom: 2px; }
+  .md-chat-input-row { display: flex; gap: 8px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  .md-chat-input-row input { flex: 1; padding: 11px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: rgba(255,255,255,0.7); font-family: var(--font-body); font-size: 13px; outline: none; }
+  .md-chat-send { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--marigold), var(--marigold-deep)); border: none; color: #1a1200; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .md-chat-react { margin-top: 5px; border: none; background: rgba(242,169,0,0.12); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700; color: var(--amber-ink); cursor: pointer; }
+  .md-chat-react.reacted { background: var(--marigold); color: #1a1200; }
+
+  @media (max-width: 360px) { .brand-name { font-size: 22px; } }
+</style>
+</head>
+<body>
+
+<div class="bg-blob b1"></div>
+<div class="bg-blob b2"></div>
+<div class="bg-blob b3"></div>
+
+<div class="app">
+
+  <!-- ═══ AUTH SCREEN ═══ -->
+  <div id="auth-screen">
+    <div class="brand-mark">
+      <div class="pulse-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 12H6L8.5 5L14 19L16.5 12H22" stroke="#1a1200" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-name">Match<span>Pulse</span></div>
+    </div>
+    <div class="brand-tag">Feel Every Beat Of The Game</div>
+
+    <div class="auth-card glass-strong" style="border-radius:28px;">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" id="tab-signup-btn" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+
+      <div class="auth-body" id="login-form">
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="email" class="field-input" id="login-email" placeholder="you@example.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <input type="password" class="field-input" id="login-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" id="login-btn" onclick="handleLogin()">Login →</button>
+        <div class="auth-link">New here? <a onclick="switchAuthTab('signup')">Create an account</a></div>
+      </div>
+
+      <div class="auth-body" id="signup-form" style="display:none">
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <input type="text" class="field-input" id="signup-name" placeholder="e.g. matchday_ken">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="email" class="field-input" id="signup-email" placeholder="you@example.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <input type="password" class="field-input" id="signup-pass" placeholder="••••••••">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Confirm Password</label>
+          <input type="password" class="field-input" id="signup-pass-confirm" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" id="signup-btn" onclick="handleSignup()">Create Account →</button>
+        <div class="auth-link">Already have an account? <a onclick="switchAuthTab('login')">Login</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APP SHELL ═══ -->
+  <div id="app-shell">
+
+    <div class="topbar" id="topbar-el">
+      <div class="topbar-brand">
+        <div class="pulse-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12H6L8.5 5L14 19L16.5 12H22" stroke="#1a1200" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="brand-name">Match<span style="color:var(--marigold-deep)">Pulse</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="balance-pill glass">
+          <span class="mono" id="topbar-balance">—</span>
+          <div class="add-btn" onclick="switchTab('profile')"><i class="fas fa-plus"></i></div>
+        </div>
+        <div class="avatar-circle" id="avatar-initial" onclick="switchTab('profile')">?</div>
+      </div>
+    </div>
+
+    <!-- HOME TAB -->
+    <div class="tab-page active" id="page-home">
+      <div class="pulse-hero glass-strong">
+        <div class="pulse-hero-eyebrow"><span class="dot"></span> World Cup 2026 · Live Tracker</div>
+        <h2>Feel Every Beat</h2>
+        <div class="pulse-hero-sub">Real-time scores, odds, and momentum — as it happens.</div>
+        <div class="pulse-stats">
+          <div><div class="pulse-stat-num" id="stat-live">0</div><div class="pulse-stat-label">Live Now</div></div>
+          <div><div class="pulse-stat-num" id="stat-upcoming">0</div><div class="pulse-stat-label">Upcoming</div></div>
+          <div><div class="pulse-stat-num" id="stat-total">0</div><div class="pulse-stat-label">Total Matches</div></div>
+        </div>
+        <div class="heartbeat-line">
+          <svg viewBox="0 0 340 34" preserveAspectRatio="none">
+            <path d="M0,17 L60,17 L75,4 L90,30 L105,17 L140,17 L155,10 L170,24 L185,17 L340,17"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title"><span class="live-dot"></span> Live Now</div>
+        <button class="see-all" onclick="switchTab('matches')">See all</button>
+      </div>
+      <div class="matches-scroll" id="home-live-scroll"></div>
+
+      <div class="section-header">
+        <div class="section-title"><i class="fas fa-calendar-days" style="color:var(--marigold-deep);font-size:13px"></i> Upcoming</div>
+        <button class="see-all" onclick="switchTab('matches')">See all</button>
+      </div>
+      <div class="matches-scroll" id="home-upcoming-scroll"></div>
+    </div>
+
+    <!-- MATCHES TAB -->
+    <div class="tab-page" id="page-matches">
+      <h2 class="display" style="font-size:22px;margin:18px 0 16px;">All Matches</h2>
+      <div class="filter-pills">
+        <button class="filter-pill active" data-filter="all" onclick="setMatchFilter('all')">All</button>
+        <button class="filter-pill" data-filter="live" onclick="setMatchFilter('live')">Live</button>
+        <button class="filter-pill" data-filter="upcoming" onclick="setMatchFilter('upcoming')">Upcoming</button>
+        <button class="filter-pill" data-filter="completed" onclick="setMatchFilter('completed')">Completed</button>
+      </div>
+      <div class="matches-list" id="matches-full-list"></div>
+    </div>
+
+    <!-- BETS TAB -->
+    <div class="tab-page" id="page-bets">
+      <h2 class="display" style="font-size:22px;margin:18px 0 16px;">My Bets</h2>
+      <div class="filter-pills">
+        <button class="filter-pill active" data-betfilter="all" onclick="setBetFilter('all')">All</button>
+        <button class="filter-pill" data-betfilter="pending" onclick="setBetFilter('pending')">Pending</button>
+        <button class="filter-pill" data-betfilter="won" onclick="setBetFilter('won')">Won</button>
+        <button class="filter-pill" data-betfilter="lost" onclick="setBetFilter('lost')">Lost</button>
+      </div>
+      <div id="bets-list"></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-page" id="page-profile">
+      <h2 class="display" style="font-size:22px;margin:18px 0 16px;">Profile</h2>
+      <div class="glass-strong" style="border-radius:22px;padding:20px;display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div class="avatar-circle" style="width:56px;height:56px;font-size:20px;position:relative;cursor:pointer;" id="profile-avatar-initial" onclick="document.getElementById('avatar-file-input').click()">?
+          <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;border:2px solid #FAF8F2;">
+            <i class="fas fa-camera" style="font-size:9px;color:var(--marigold);"></i>
+          </div>
+        </div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+        <div>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:17px;" id="profile-name">—</div>
+          <div style="font-size:12px;color:var(--ink-soft);" id="profile-email">—</div>
+        </div>
+      </div>
+
+      <div class="profile-stat-grid">
+        <div class="profile-stat-card glass"><div class="profile-stat-num" id="profile-total-bets">0</div><div class="profile-stat-label">Total Bets</div></div>
+        <div class="profile-stat-card glass"><div class="profile-stat-num" id="profile-won">0</div><div class="profile-stat-label">Won</div></div>
+        <div class="profile-stat-card glass"><div class="profile-stat-num" id="profile-winrate">0%</div><div class="profile-stat-label">Win Rate</div></div>
+      </div>
+
+      <div class="menu-row glass"><div class="menu-row-left"><i class="fas fa-wallet"></i> Balance</div><span class="mono" id="profile-balance-val">—</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <button class="btn-primary" style="flex:1;padding:12px;font-size:13px;" onclick="openAmountSheet('deposit')">+ Add Balance</button>
+        <button class="btn-primary" style="flex:1;padding:12px;font-size:13px;background:linear-gradient(135deg,#3a3226,#171410);color:var(--marigold);" onclick="openAmountSheet('withdraw')">↑ Withdraw</button>
+      </div>
+      <div class="menu-row glass" onclick="switchTab('bets')"><div class="menu-row-left"><i class="fas fa-receipt"></i> Bet History</div><i class="fas fa-chevron-right" style="color:var(--ink-soft);font-size:12px;"></i></div>
+      <div class="menu-row glass" onclick="openWalletModal()"><div class="menu-row-left"><i class="fas fa-wallet" style="color:var(--marigold-deep);"></i> <span id="wallet-status-label">Connect Solana Wallet</span></div><i class="fas fa-chevron-right" style="color:var(--ink-soft);font-size:12px;"></i></div>
+      <div class="menu-row glass" onclick="handleTelegramConnect()"><div class="menu-row-left"><i class="fab fa-telegram"></i> <span id="telegram-status-label">Connect Telegram</span></div><i class="fas fa-chevron-right" style="color:var(--ink-soft);font-size:12px;"></i></div>
+      <div class="menu-row glass" onclick="handleLogout()"><div class="menu-row-left" style="color:var(--red)"><i class="fas fa-arrow-right-from-bracket" style="color:var(--red)"></i> Logout</div></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav glass-strong" id="bottom-nav" style="display:none">
+    <button class="nav-item active" data-tab="home" onclick="switchTab('home')"><i class="fas fa-house"></i>Home</button>
+    <button class="nav-item" data-tab="matches" onclick="switchTab('matches')"><i class="fas fa-futbol"></i>Matches</button>
+    <button class="nav-item" data-tab="bets" onclick="switchTab('bets')"><i class="fas fa-ticket"></i>My Bets</button>
+    <button class="nav-item" data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i>Profile</button>
+  </div>
+
+</div>
+
+<!-- MATCH DETAIL -->
+<div class="match-detail-overlay" id="match-detail-overlay">
+  <div class="md-header">
+    <button class="md-back" onclick="closeMatchDetail()"><i class="fas fa-arrow-left"></i></button>
+    <div>
+      <div style="font-weight:700;font-size:15px;" id="md-title">—</div>
+      <div style="font-size:11px;color:var(--ink-soft);" id="md-subtitle">—</div>
+    </div>
+  </div>
+  <div class="md-body">
+    <div class="glass-strong" style="border-radius:20px;padding:18px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="team-block"><div class="team-flag" id="md-home-flag">🏳️</div><div class="team-name" id="md-home-name">—</div></div>
+        <div class="score-center mono" id="md-score" style="font-size:30px;">0-0</div>
+        <div class="team-block"><div class="team-flag" id="md-away-flag">🏳️</div><div class="team-name" id="md-away-name">—</div></div>
+      </div>
+    </div>
+    <div class="md-stat-grid" id="md-stat-grid"></div>
+    <div class="section-title" style="margin:18px 0 10px;">Match Events</div>
+    <div id="md-timeline"></div>
+  </div>
+  <div class="md-chat-section glass">
+    <div class="md-chat-messages" id="md-chat-messages"></div>
+    <div class="md-chat-input-row">
+      <input type="text" id="md-chat-input" placeholder="Say something..." maxlength="200" onkeydown="if(event.key==='Enter')sendChatMessage()">
+      <button class="md-chat-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- BET SHEET -->
+<div class="sheet-backdrop" id="bet-backdrop" onclick="closeBetSheet(event)">
+  <div class="bet-sheet glass-strong" id="bet-sheet">
+    <div class="sheet-handle"></div>
+    <div id="bet-sheet-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where,
+    orderBy, onSnapshot, addDoc, serverTimestamp, increment, arrayUnion, arrayRemove
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBuUjkOxYEI-UgLAlioMZqjY9YPL8lmuOA",
+    authDomain: "match-pulse-1c183.firebaseapp.com",
+    projectId: "match-pulse-1c183",
+    storageBucket: "match-pulse-1c183.firebasestorage.app",
+    messagingSenderId: "1097442101839",
+    appId: "1:1097442101839:web:6c56df6f3b29a1ee36783a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window.GoalLineDB = {
+    db, auth, doc, setDoc, getDoc, updateDoc, collection, query, where,
+    orderBy, onSnapshot, addDoc, serverTimestamp, increment, arrayUnion, arrayRemove,
+    signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged
+  };
+</script>
+
+<script>
+  const SIGNUP_BONUS = 1000;
+  const TELEGRAM_BOT_USERNAME = 'matchpulserobot';
+
+  function vibrate(ms) {
+    if (navigator.vibrate) navigator.vibrate(ms || 15);
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-primary, .nav-item, .odds-btn, .stake-chip, .auth-tab, .filter-pill, .menu-row, .wallet-option-row')) {
+      vibrate(15);
+    }
+  });
+  let currentUser = null;
+  let currentUserData = null;
+  let matches = [];
+  let myBets = [];
+  let matchFilter = 'all';
+  let betFilter = 'all';
+  let selectedMatchForBet = null;
+  let selectedOutcome = null;
+  let selectedStake = 50;
+  let unsubMarkets = null;
+  let unsubBets = null;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function switchAuthTab(tab) {
+    document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + tab).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
+    window.scrollTo(0, 0);
+  }
+
+  // ─── AUTH ───
+  async function handleSignup() {
+    const fs = window.GoalLineDB;
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass = document.getElementById('signup-pass').value;
+    const passConfirm = document.getElementById('signup-pass-confirm').value;
+
+    if (!name || !email || !pass || !passConfirm) { showToast('Fill in all fields'); return; }
+    if (pass !== passConfirm) { showToast('Passwords do not match'); return; }
+    if (pass.length < 6) { showToast('Password should be at least 6 characters'); return; }
+
+    const btn = document.getElementById('signup-btn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+
+    try {
+      const cred = await fs.createUserWithEmailAndPassword(fs.auth, email, pass);
+      await fs.setDoc(fs.doc(fs.db, 'users', cred.user.uid), {
+        name, email,
+        balance: SIGNUP_BONUS,
+        createdAt: fs.serverTimestamp()
+      });
+      window._justAuthed = true;
+      showToast('Welcome to Match Pulse! 🎉');
+    } catch (err) {
+      showToast(err.message.replace('Firebase: ', ''));
+      btn.disabled = false; btn.textContent = 'Create Account →';
+    }
+  }
+
+  async function handleLogin() {
+    window._justAuthed = true;
+    const fs = window.GoalLineDB;
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (!email || !pass) { showToast('Enter email and password'); return; }
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Logging in...';
+    try {
+      await fs.signInWithEmailAndPassword(fs.auth, email, pass);
+    } catch (err) {
+      showToast(err.message.replace('Firebase: ', ''));
+      btn.disabled = false; btn.textContent = 'Login →';
+    }
+  }
+
+  function handleLogout() {
+    const fs = window.GoalLineDB;
+    fs.signOut(fs.auth);
+  }
+
+  // ─── AUTH STATE ───
+  window.addEventListener('DOMContentLoaded', () => {
+    const fs = window.GoalLineDB;
+    fs.onAuthStateChanged(fs.auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-shell').style.display = 'block';
+        document.getElementById('bottom-nav').style.display = 'flex';
+        await loadUserData();
+        listenToMarkets();
+        listenToMyBets();
+        if (!currentUserData.walletAddress && window.solana && window.solana.isPhantom) {
+          window.solana.connect({ onlyIfTrusted: true })
+            .then(res => finishWalletConnect(res.publicKey.toString(), 'Phantom'))
+            .catch(() => {});
+        }
+        if (window._justAuthed) {
+          window._justAuthed = false;
+          if (!currentUserData.walletAddress) setTimeout(() => openWalletModal(), 500);
+        }
+      } else {
+        currentUser = null;
+        if (unsubMarkets) unsubMarkets();
+        if (unsubBets) unsubBets();
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-shell').style.display = 'none';
+        document.getElementById('bottom-nav').style.display = 'none';
+        ['login-btn','signup-btn'].forEach(id => {
+          const b = document.getElementById(id);
+          if (b) { b.disabled = false; }
+        });
+        document.getElementById('login-btn').textContent = 'Login →';
+        document.getElementById('signup-btn').textContent = 'Create Account →';
+      }
+    });
+  });
+
+  let unsubUserDoc = null;
+  async function loadUserData() {
+    const fs = window.GoalLineDB;
+    return new Promise((resolve) => {
+      let firstLoad = true;
+      unsubUserDoc = fs.onSnapshot(fs.doc(fs.db, 'users', currentUser.uid), snap => {
+        if (!snap.exists()) return;
+        const wasLinked = currentUserData?.telegramChatId;
+        currentUserData = snap.data();
+        renderUserBits();
+        if (!firstLoad && !wasLinked && currentUserData.telegramChatId) showToast('Telegram connected! ✅');
+        if (firstLoad) { firstLoad = false; resolve(); }
+      });
+    });
+  }
+
+  function renderUserBits() {
+    if (!currentUserData) return;
+    const initial = (currentUserData.name || '?').charAt(0).toUpperCase();
+    const avatarHTML = currentUserData.avatarUrl
+      ? `<img src="${currentUserData.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+      : initial;
+    document.getElementById('avatar-initial').innerHTML = avatarHTML;
+    const profAv = document.getElementById('profile-avatar-initial');
+    profAv.innerHTML = avatarHTML + `<div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;border:2px solid #FAF8F2;"><i class="fas fa-camera" style="font-size:9px;color:var(--marigold);"></i></div>`;
+    document.getElementById('profile-name').textContent = currentUserData.name || 'Player';
+    document.getElementById('profile-email').textContent = currentUserData.email || '';
+    const tgLabel = document.getElementById('telegram-status-label');
+    if (tgLabel) tgLabel.textContent = currentUserData.telegramChatId ? 'Telegram Connected ✅' : 'Connect Telegram';
+    const walletLabel = document.getElementById('wallet-status-label');
+    if (walletLabel) {
+      walletLabel.textContent = currentUserData.walletAddress
+        ? `${currentUserData.walletProvider || 'Wallet'} · ${currentUserData.walletAddress.slice(0,4)}…${currentUserData.walletAddress.slice(-4)}`
+        : 'Connect Solana Wallet';
+    }
+    document.getElementById('topbar-balance').textContent = (currentUserData.balance ?? 0).toLocaleString() + ' MP';
+    document.getElementById('profile-balance-val').textContent = (currentUserData.balance ?? 0).toLocaleString() + ' MP';
+  }
+
+  // ─── MARKETS (live data from server.js) ───
+  function listenToMarkets() {
+    const fs = window.GoalLineDB;
+    const q = fs.query(fs.collection(fs.db, 'markets'), fs.orderBy('kickoffAt', 'asc'));
+    unsubMarkets = fs.onSnapshot(q, snap => {
+      matches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAll();
+      if (activeDetailMatchId) openMatchDetail(activeDetailMatchId);
+    });
+  }
+
+  function oddsDisplay(v) {
+    return (v === null || v === undefined || isNaN(v)) ? 'Soon' : v + 'x';
+  }
+
+  function liveMinuteDisplay(m) {
+    if (!m.kickoffAt) return 'LIVE';
+    const elapsedMs = Date.now() - new Date(m.kickoffAt).getTime();
+    const mins = Math.floor(elapsedMs / 60000);
+    if (mins < 0) return 'LIVE';
+    if (mins <= 45) return mins + "'";
+    if (mins <= 60) return 'HT';
+    if (mins <= 105) return (mins - 15) + "'";
+    return "90+'";
+  }
+
+  function heartbeatSVG(mini) {
+    const cls = mini ? 'heartbeat-mini' : 'heartbeat-line';
+    return `<div class="${cls}"><svg viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M0,10 L36,10 L44,2 L54,18 L64,10 L80,10 L88,6 L96,14 L104,10 L200,10"/></svg></div>`;
+  }
+
+  function matchCardHTML(m, compact) {
+    const statusClass = m.status === 'live' ? 'live' : m.status === 'completed' ? 'completed' : 'upcoming';
+    const statusLabel = m.status === 'live' ? liveMinuteDisplay(m) : m.status === 'completed' ? 'FT' : m.time;
+    const center = (m.status === 'live' || m.status === 'completed')
+      ? `<div class="score-center mono">${m.score || '0-0'}</div>`
+      : `<div class="vs-center">VS</div>`;
+
+    const oddsRow = m.status !== 'completed' ? `
+      <div class="odds-row">
+        <div class="odds-btn" onclick="event.stopPropagation();openBetSheet('${m.id}','home',this)"><div class="odds-label">${m.home}</div><div class="odds-val mono">${oddsDisplay(m.oddsHome)}</div></div>
+        <div class="odds-btn" onclick="event.stopPropagation();openBetSheet('${m.id}','draw',this)"><div class="odds-label">Draw</div><div class="odds-val mono">${oddsDisplay(m.oddsDraw)}</div></div>
+        <div class="odds-btn" onclick="event.stopPropagation();openBetSheet('${m.id}','away',this)"><div class="odds-label">${m.away}</div><div class="odds-val mono">${oddsDisplay(m.oddsAway)}</div></div>
+      </div>` : `
+      <div style="text-align:center;font-size:12px;color:var(--ink-soft);font-weight:600;">
+        ${m.winner === 'home' ? m.home : m.winner === 'away' ? m.away : 'Draw'} ${m.winner ? 'won' : ''}
+      </div>`;
+
+    return `
+      <div class="match-card glass" onclick="openMatchDetail('${m.id}')">
+        <div class="match-card-top">
+          <div class="match-status-badge ${statusClass}">${m.status === 'live' ? '<span style="width:5px;height:5px;border-radius:50%;background:var(--red);"></span>' : ''}${statusLabel}</div>
+          <div class="match-time-label mono">${m.status === 'upcoming' ? m.time : ''}</div>
+        </div>
+        <div class="match-teams">
+          <div class="team-block"><div class="team-flag">${m.homeFlag || '🏳️'}</div><div class="team-name">${m.home}</div></div>
+          ${center}
+          <div class="team-block"><div class="team-flag">${m.awayFlag || '🏳️'}</div><div class="team-name">${m.away}</div></div>
+        </div>
+        ${m.status === 'live' ? heartbeatSVG(true) : '<div style="height:8px"></div>'}
+        ${oddsRow}
+      </div>`;
+  }
+
+  function renderAll() {
+    const live = matches.filter(m => m.status === 'live');
+    const upcoming = matches.filter(m => m.status === 'upcoming');
+    const completed = matches.filter(m => m.status === 'completed');
+
+    document.getElementById('stat-live').textContent = live.length;
+    document.getElementById('stat-upcoming').textContent = upcoming.length;
+    document.getElementById('stat-total').textContent = matches.length;
+
+    document.getElementById('home-live-scroll').innerHTML = live.length
+      ? live.map(m => matchCardHTML(m)).join('')
+      : `<div class="empty-state" style="min-width:100%"><i class="fas fa-moon"></i><div>No live matches right now</div></div>`;
+
+    document.getElementById('home-upcoming-scroll').innerHTML = upcoming.slice(0,8).length
+      ? upcoming.slice(0,8).map(m => matchCardHTML(m)).join('')
+      : `<div class="empty-state" style="min-width:100%"><i class="fas fa-calendar"></i><div>No upcoming matches</div></div>`;
+    updateCenteredCard();
+
+    let filtered = matches;
+    if (matchFilter !== 'all') filtered = matches.filter(m => m.status === matchFilter);
+    document.getElementById('matches-full-list').innerHTML = filtered.length
+      ? filtered.map(m => matchCardHTML(m)).join('')
+      : `<div class="empty-state"><i class="fas fa-futbol"></i><div>No matches in this category</div></div>`;
+  }
+
+  function setMatchFilter(f) {
+    matchFilter = f;
+    document.querySelectorAll('[data-filter]').forEach(el => el.classList.toggle('active', el.dataset.filter === f));
+    renderAll();
+  }
+
+  function updateCenteredCard() {
+    const scroller = document.getElementById('home-upcoming-scroll');
+    if (!scroller) return;
+    const cards = scroller.querySelectorAll('.match-card');
+    if (!cards.length) return;
+    const scrollerCenter = scroller.getBoundingClientRect().left + scroller.clientWidth / 2;
+    let closest = null, closestDist = Infinity;
+    cards.forEach(card => {
+      const cardCenter = card.getBoundingClientRect().left + card.offsetWidth / 2;
+      const dist = Math.abs(scrollerCenter - cardCenter);
+      if (dist < closestDist) { closestDist = dist; closest = card; }
+    });
+    cards.forEach(c => c.classList.toggle('is-centered', c === closest));
+  }
+  let upcomingScrollRaf = null;
+  document.addEventListener('DOMContentLoaded', () => {
+    const scroller = document.getElementById('home-upcoming-scroll');
+    if (scroller) {
+      scroller.addEventListener('scroll', () => {
+        if (upcomingScrollRaf) cancelAnimationFrame(upcomingScrollRaf);
+        upcomingScrollRaf = requestAnimationFrame(updateCenteredCard);
+      });
+    }
+  });
+
+  // ─── BET SHEET ───
+  function openBetSheet(matchId, outcome, btnEl) {
+    const m = matches.find(x => x.id === matchId);
+    if (!m) return;
+    if (m.status === 'completed') { showToast('This match has ended'); return; }
+    selectedMatchForBet = m;
+    selectedOutcome = outcome;
+    selectedStake = 50;
+
+    if (btnEl) {
+      const row = btnEl.closest('.odds-row');
+      if (row) row.querySelectorAll('.odds-btn').forEach(b => b.classList.remove('selected'));
+      btnEl.classList.add('selected');
+    }
+
+    const oddsVal = outcome === 'home' ? m.oddsHome : outcome === 'draw' ? m.oddsDraw : m.oddsAway;
+    const outcomeLabel = outcome === 'home' ? m.home : outcome === 'draw' ? 'Draw' : m.away;
+
+    document.getElementById('bet-sheet-content').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--ink-soft);font-weight:600;">${m.home} vs ${m.away}</div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:18px;margin-top:4px;">Betting on ${outcomeLabel}</div>
+        <div class="mono" style="color:var(--marigold-deep);font-size:22px;font-weight:700;margin-top:4px;">${oddsDisplay(oddsVal)}</div>
+      </div>
+      <label class="field-label">Stake Amount</label>
+      <div class="stake-chips">
+        ${[50,100,250,500].map(v => `<div class="stake-chip ${v===50?'selected':''}" data-stake="${v}" onclick="pickStake(${v})">${v} MP</div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--ink-soft);margin:14px 0;padding:0 4px;">
+        <span>Potential payout</span>
+        <span class="mono" id="potential-payout" style="font-weight:700;color:var(--ink);">${(50 * (oddsVal||0)).toFixed(0)} MP</span>
+      </div>
+      <button class="btn-primary" onclick="placeBet()">Place Bet</button>
+    `;
+
+    document.getElementById('bet-backdrop').style.display = 'block';
+    setTimeout(() => { document.getElementById('bet-sheet').style.transform = 'translateY(0)'; }, 10);
+  }
+
+  function pickStake(v) {
+    selectedStake = v;
+    document.querySelectorAll('.stake-chip').forEach(c => c.classList.toggle('selected', Number(c.dataset.stake) === v));
+    const m = selectedMatchForBet;
+    const oddsVal = selectedOutcome === 'home' ? m.oddsHome : selectedOutcome === 'draw' ? m.oddsDraw : m.oddsAway;
+    document.getElementById('potential-payout').textContent = (v * (oddsVal||0)).toFixed(0) + ' MP';
+  }
+
+  function closeBetSheet(e) {
+    if (e && e.target.id !== 'bet-backdrop') return;
+    document.getElementById('bet-sheet').style.transform = 'translateY(100%)';
+    setTimeout(() => { document.getElementById('bet-backdrop').style.display = 'none'; }, 280);
+  }
+
+  async function placeBet() {
+    const fs = window.GoalLineDB;
+    const m = selectedMatchForBet;
+    if (!m || !currentUserData) return;
+    if ((currentUserData.balance || 0) < selectedStake) { showToast('Insufficient balance'); return; }
+
+    const oddsVal = selectedOutcome === 'home' ? m.oddsHome : selectedOutcome === 'draw' ? m.oddsDraw : m.oddsAway;
+    const payout = Math.round(selectedStake * (oddsVal || 0));
+
+    try {
+      await fs.addDoc(fs.collection(fs.db, 'bets'), {
+        uid: currentUser.uid,
+        marketId: m.id,
+        home: m.home, away: m.away,
+        outcome: selectedOutcome,
+        stake: selectedStake,
+        odds: oddsVal,
+        payout,
+        status: 'pending',
+        createdAt: fs.serverTimestamp()
+      });
+      await fs.updateDoc(fs.doc(fs.db, 'users', currentUser.uid), {
+        balance: fs.increment(-selectedStake)
+      });
+      currentUserData.balance -= selectedStake;
+      renderUserBits();
+      closeBetSheet();
+      showToast('Bet placed! Good luck 🍀');
+    } catch (err) {
+      showToast('Could not place bet — try again');
+    }
+  }
+
+  // ─── MY BETS ───
+  function listenToMyBets() {
+    const fs = window.GoalLineDB;
+    const q = fs.query(fs.collection(fs.db, 'bets'), fs.where('uid', '==', currentUser.uid), fs.orderBy('createdAt', 'desc'));
+    unsubBets = fs.onSnapshot(q, snap => {
+      myBets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderBets();
+      renderProfileStats();
+    });
+  }
+
+  function betRowHTML(b) {
+    const outcomeLabel = b.outcome === 'home' ? b.home : b.outcome === 'draw' ? 'Draw' : b.away;
+    const statusColor = b.status === 'won' ? 'var(--green)' : b.status === 'lost' ? 'var(--red)' : 'var(--amber-ink)';
+    return `
+      <div class="glass" style="border-radius:16px;padding:14px 16px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-weight:700;font-size:13px;">${b.home} vs ${b.away}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:${statusColor};">${b.status}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);">
+          <span>${outcomeLabel} · ${b.odds}x</span>
+          <span class="mono">Stake ${b.stake} MP → ${b.payout} MP</span>
+        </div>
+      </div>`;
+  }
+
+  function renderBets() {
+    let filtered = myBets;
+    if (betFilter !== 'all') filtered = myBets.filter(b => b.status === betFilter);
+    document.getElementById('bets-list').innerHTML = filtered.length
+      ? filtered.map(betRowHTML).join('')
+      : `<div class="empty-state"><i class="fas fa-ticket"></i><div>No bets yet — place one from the Matches tab!</div></div>`;
+  }
+
+  function setBetFilter(f) {
+    betFilter = f;
+    document.querySelectorAll('[data-betfilter]').forEach(el => el.classList.toggle('active', el.dataset.betfilter === f));
+    renderBets();
+  }
+
+  function renderProfileStats() {
+    const total = myBets.length;
+    const won = myBets.filter(b => b.status === 'won').length;
+    const winRate = total ? Math.round((won / total) * 100) : 0;
+    document.getElementById('profile-total-bets').textContent = total;
+    document.getElementById('profile-won').textContent = won;
+    document.getElementById('profile-winrate').textContent = winRate + '%';
+  }
+
+  // ─── MATCH DETAIL (live stats, timeline, chat) ───
+  let unsubChat = null;
+  let activeDetailMatchId = null;
+
+  function eventCounts(events, team) {
+    const list = Array.isArray(events) ? events : [];
+    const count = (type) => list.filter(e => e.type === type && e.label && e.label.includes(team)).length;
+    return { goals: count('goal'), yellow: count('yellow'), red: count('red'), corners: count('corner') };
+  }
+
+  function openMatchDetail(matchId) {
+    const m = matches.find(x => x.id === matchId);
+    if (!m) return;
+    activeDetailMatchId = matchId;
+    document.getElementById('md-title').textContent = `${m.home} vs ${m.away}`;
+    document.getElementById('md-subtitle').textContent = m.status === 'live' ? 'LIVE · ' + liveMinuteDisplay(m) : m.status === 'completed' ? 'Full Time' : m.time;
+    document.getElementById('md-home-flag').textContent = m.homeFlag || '🏳️';
+    document.getElementById('md-away-flag').textContent = m.awayFlag || '🏳️';
+    document.getElementById('md-home-name').textContent = m.home;
+    document.getElementById('md-away-name').textContent = m.away;
+    document.getElementById('md-score').textContent = m.score || '0-0';
+
+    const home = eventCounts(m.events, m.home);
+    const away = eventCounts(m.events, m.away);
+    document.getElementById('md-stat-grid').innerHTML = `
+      <div class="md-stat-card glass"><div class="md-stat-nums"><span>${home.goals}</span><span>${away.goals}</span></div><div class="md-stat-label">⚽ Goals</div></div>
+      <div class="md-stat-card glass"><div class="md-stat-nums"><span>${home.corners}</span><span>${away.corners}</span></div><div class="md-stat-label">🚩 Corners</div></div>
+      <div class="md-stat-card glass"><div class="md-stat-nums"><span>${home.yellow}🟨 ${home.red}🟥</span><span>${away.yellow}🟨 ${away.red}🟥</span></div><div class="md-stat-label">Cards</div></div>
+    `;
+
+    const events = (m.events || []).slice().reverse();
+    document.getElementById('md-timeline').innerHTML = events.length
+      ? events.map(e => `<div class="md-timeline-item"><span>${e.type === 'goal' ? '⚽' : e.type === 'red' ? '🟥' : e.type === 'yellow' ? '🟨' : '🚩'}</span><span>${e.label}</span></div>`).join('')
+      : `<div class="empty-state"><i class="fas fa-clock"></i><div>No events yet</div></div>`;
+
+    document.getElementById('match-detail-overlay').classList.add('open');
+    listenToMatchChat(matchId);
+  }
+
+  function closeMatchDetail() {
+    document.getElementById('match-detail-overlay').classList.remove('open');
+    if (unsubChat) { unsubChat(); unsubChat = null; }
+    activeDetailMatchId = null;
+  }
+
+  function listenToMatchChat(matchId) {
+    const fs = window.GoalLineDB;
+    if (unsubChat) unsubChat();
+    const q = fs.query(fs.collection(fs.db, 'matchChat'), fs.where('matchId', '==', matchId), fs.orderBy('createdAt', 'asc'));
+    unsubChat = fs.onSnapshot(q, snap => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).slice(-100);
+      const box = document.getElementById('md-chat-messages');
+      box.innerHTML = msgs.length
+        ? msgs.map(msg => {
+            const fireList = msg.reactions?.fire || [];
+            const reacted = currentUser && fireList.includes(currentUser.uid);
+            return `<div class="md-chat-msg">
+              <div class="md-chat-name">${msg.name || 'Fan'}</div>
+              <div>${msg.text}</div>
+              <button class="md-chat-react ${reacted ? 'reacted' : ''}" onclick="toggleReaction('${msg.id}', ${reacted})">🔥 ${fireList.length || ''}</button>
+            </div>`;
+          }).join('')
+        : `<div class="empty-state" style="padding:20px 10px;"><i class="fas fa-comments"></i><div style="font-size:12px;">Be the first to comment</div></div>`;
+      box.scrollTop = box.scrollHeight;
+    });
+  }
+
+  async function toggleReaction(msgId, hasReacted) {
+    const fs = window.GoalLineDB;
+    if (!currentUser) return;
+    try {
+      await fs.updateDoc(fs.doc(fs.db, 'matchChat', msgId), {
+        'reactions.fire': hasReacted ? fs.arrayRemove(currentUser.uid) : fs.arrayUnion(currentUser.uid)
+      });
+    } catch (err) {
+      showToast('Reaction failed — try again');
+    }
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('md-chat-input');
+    const text = input.value.trim();
+    if (!text || !activeDetailMatchId || !currentUserData) return;
+    input.value = '';
+    const fs = window.GoalLineDB;
+    try {
+      await fs.addDoc(fs.collection(fs.db, 'matchChat'), {
+        matchId: activeDetailMatchId,
+        uid: currentUser.uid,
+        name: currentUserData.name || 'Fan',
+        text: text.slice(0, 200),
+        createdAt: fs.serverTimestamp()
+      });
+    } catch (err) {
+      showToast('Message failed to send');
+    }
+  }
+
+  // ─── AVATAR UPLOAD ───
+  async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const fs = window.GoalLineDB;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        showToast('Uploading photo...');
+        const res = await fetch('/api/upload-avatar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: reader.result })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) throw new Error(data.error || `Upload failed (${res.status})`);
+        await fs.updateDoc(fs.doc(fs.db, 'users', currentUser.uid), { avatarUrl: data.url });
+        showToast('Profile photo updated!');
+      } catch (err) {
+        console.error('Avatar upload error:', err);
+        showToast('Upload failed: ' + (err.message || 'unknown error'));
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ─── ADD / WITHDRAW BALANCE (devnet — instant, no limits) ───
+  let amountSheetType = 'deposit';
+  let amountSheetValue = 100;
+
+  function openAmountSheet(type) {
+    amountSheetType = type;
+    amountSheetValue = 100;
+    const title = type === 'deposit' ? 'Add Balance' : 'Withdraw Balance';
+    const sub = type === 'deposit' ? 'Devnet funds — add any amount instantly.' : 'Devnet funds — withdraw any amount instantly.';
+    document.getElementById('bet-sheet-content').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:18px;">${title}</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">${sub}</div>
+      </div>
+      <label class="field-label">Amount (MP)</label>
+      <input type="number" class="field-input" id="amount-sheet-input" value="100" min="1" oninput="amountSheetValue=Number(this.value)||0" style="margin-bottom:16px;">
+      <div class="stake-chips">
+        ${[100,500,1000,5000].map(v => `<div class="stake-chip" data-amt="${v}" onclick="setAmountSheetValue(${v})">${v} MP</div>`).join('')}
+      </div>
+      <button class="btn-primary" style="margin-top:16px;" onclick="submitAmountSheet()">${type === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}</button>
+    `;
+    document.getElementById('bet-backdrop').style.display = 'block';
+    setTimeout(() => { document.getElementById('bet-sheet').style.transform = 'translateY(0)'; }, 10);
+  }
+
+  function setAmountSheetValue(v) {
+    amountSheetValue = v;
+    document.getElementById('amount-sheet-input').value = v;
+    document.querySelectorAll('[data-amt]').forEach(c => c.classList.toggle('selected', Number(c.dataset.amt) === v));
+  }
+
+  async function submitAmountSheet() {
+    const fs = window.GoalLineDB;
+    if (!amountSheetValue || amountSheetValue <= 0) { showToast('Enter a valid amount'); return; }
+    if (amountSheetType === 'withdraw' && amountSheetValue > (currentUserData.balance || 0)) {
+      showToast('Withdrawal exceeds your balance'); return;
+    }
+    const delta = amountSheetType === 'deposit' ? amountSheetValue : -amountSheetValue;
+    try {
+      await fs.updateDoc(fs.doc(fs.db, 'users', currentUser.uid), { balance: fs.increment(delta) });
+      closeBetSheet();
+      showToast(amountSheetType === 'deposit' ? 'Balance added!' : 'Withdrawal complete!');
+    } catch (err) {
+      showToast('Something went wrong — try again');
+    }
+  }
+
+  // ─── WALLET CONNECT ───
+  const WALLET_OPTIONS = [
+    { name: "Phantom", domain: "phantom.app" },
+    { name: "Solflare", domain: "solflare.com" },
+    { name: "Backpack", domain: "backpack.app" },
+    { name: "Coinbase Wallet", domain: "coinbase.com" },
+    { name: "Trust Wallet", domain: "trustwallet.com" },
+    { name: "Zerion", domain: "zerion.io" },
+  ];
+
+  function openWalletModal() {
+    const rows = WALLET_OPTIONS.map(w => `
+      <div class="wallet-option-row" onclick="selectWallet('${w.name}')" style="display:flex;align-items:center;gap:12px;padding:13px;border-radius:14px;background:rgba(255,255,255,0.5);margin-bottom:8px;cursor:pointer;">
+        <img src="https://www.google.com/s2/favicons?sz=128&domain=${w.domain}" style="width:36px;height:36px;border-radius:9px;background:#fff;object-fit:contain;padding:4px;">
+        <div style="font-weight:700;font-size:14px;">${w.name}</div>
+      </div>`).join('');
+
+    document.getElementById('bet-sheet-content').innerHTML = `
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:18px;">Connect a Wallet</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Optional — link a Solana wallet to your account</div>
+      </div>
+      ${rows}
+      <button class="btn-primary" style="margin-top:8px;background:rgba(23,20,16,0.06);color:var(--ink-soft);box-shadow:none;" onclick="closeBetSheet()">Skip for now</button>
+    `;
+    document.getElementById('bet-backdrop').style.display = 'block';
+    setTimeout(() => { document.getElementById('bet-sheet').style.transform = 'translateY(0)'; }, 10);
+  }
+
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  function selectWallet(name) {
+    if (name === "Phantom") {
+      if (window.solana && window.solana.isPhantom) {
+        window.solana.connect().then(res => finishWalletConnect(res.publicKey.toString(), 'Phantom')).catch(() => showToast('Connection rejected'));
+      } else if (isMobileDevice()) {
+        const currentUrl = encodeURIComponent(window.location.href);
+        const refUrl = encodeURIComponent(window.location.origin);
+        window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${refUrl}`;
+      } else {
+        showToast('Phantom extension not found — opening install page');
+        window.open('https://phantom.app/download', '_blank');
+      }
+    } else if (name === "Solflare") {
+      if (window.solflare && window.solflare.isSolflare) {
+        window.solflare.connect().then(() => finishWalletConnect(window.solflare.publicKey.toString(), 'Solflare')).catch(() => showToast('Connection rejected'));
+      } else if (isMobileDevice()) {
+        const currentUrl = encodeURIComponent(window.location.href);
+        const refUrl = encodeURIComponent(window.location.origin);
+        window.location.href = `https://solflare.com/ul/v1/browse/${currentUrl}?ref=${refUrl}`;
+      } else {
+        showToast('Solflare extension not found — opening install page');
+        window.open('https://solflare.com/download', '_blank');
+      }
+    } else {
+      showToast(name + ' auto-connect coming soon — try Phantom or Solflare for now');
+    }
+  }
+
+  async function finishWalletConnect(address, provider) {
+    const fs = window.GoalLineDB;
+    try {
+      await fs.updateDoc(fs.doc(fs.db, 'users', currentUser.uid), {
+        walletAddress: address,
+        walletProvider: provider || 'Wallet'
+      });
+      closeBetSheet();
+      showToast('Wallet connected!');
+    } catch (err) {
+      showToast('Could not save wallet — try again');
+    }
+  }
+
+  // ─── TELEGRAM LINKING ───
+  function generateOtpCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  async function handleTelegramConnect() {
+    if (currentUserData.telegramChatId) { showToast('Telegram already connected ✅'); return; }
+    const fs = window.GoalLineDB;
+    const code = generateOtpCode();
+    const expires = new Date(Date.now() + 5 * 60000);
+    try {
+      await fs.updateDoc(fs.doc(fs.db, 'users', currentUser.uid), {
+        telegramOtp: code,
+        telegramOtpExpires: expires
+      });
+      document.getElementById('bet-sheet-content').innerHTML = `
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-family:var(--font-display);font-weight:700;font-size:18px;">Connect Telegram</div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Code expires in 5 minutes</div>
+        </div>
+        <div class="mono" style="text-align:center;font-size:32px;font-weight:700;letter-spacing:0.1em;color:var(--marigold-deep);margin:18px 0;">${code}</div>
+        <button class="btn-primary" onclick="window.open('https://t.me/${TELEGRAM_BOT_USERNAME}?start=${code}','_blank')">Open Telegram →</button>
+        <div style="font-size:12px;color:var(--ink-soft);text-align:center;margin-top:12px;">Or open @${TELEGRAM_BOT_USERNAME} and send /link ${code}</div>
+      `;
+      document.getElementById('bet-backdrop').style.display = 'block';
+      setTimeout(() => { document.getElementById('bet-sheet').style.transform = 'translateY(0)'; }, 10);
+    } catch (err) {
+      showToast('Could not generate code — try again');
+    }
+  }
+
+  // Expose functions used by inline onclick handlers
+  window.handleAvatarUpload = handleAvatarUpload;
+  window.openAmountSheet = openAmountSheet;
+  window.setAmountSheetValue = setAmountSheetValue;
+  window.submitAmountSheet = submitAmountSheet;
+  window.openWalletModal = openWalletModal;
+  window.selectWallet = selectWallet;
+  window.handleTelegramConnect = handleTelegramConnect;
+  window.switchAuthTab = switchAuthTab;
+  window.switchTab = switchTab;
+  window.handleSignup = handleSignup;
+  window.handleLogin = handleLogin;
+  window.handleLogout = handleLogout;
+  window.setMatchFilter = setMatchFilter;
+  window.setBetFilter = setBetFilter;
+  window.openBetSheet = openBetSheet;
+  window.pickStake = pickStake;
+  window.closeBetSheet = closeBetSheet;
+  window.placeBet = placeBet;
+  window.openMatchDetail = openMatchDetail;
+  window.closeMatchDetail = closeMatchDetail;
+  window.sendChatMessage = sendChatMessage;
+  window.toggleReaction = toggleReaction;
+</script>
+
+</body>
+</html>
