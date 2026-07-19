@@ -5,7 +5,8 @@
   "main": "subscribeAndActivate.js",
   "scripts": {
     "start": "node server.js",
-    "generate-wallet": "node generateWallet.js"
+    "generate-wallet": "node generateWallet.js",
+    "subscribe-activate": "node subscribeAndActivate.js"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
